@@ -17,7 +17,7 @@ public class WeatherCityController {
         this.weatherService = weatherService;
     }
 
-    @GetMapping("/")
+    @GetMapping
     public Flux<WeatherInfo> getAllWeatherByCity(@RequestParam String city) {
         return weatherService.queryWeatherInfoByCity(city);
     }
