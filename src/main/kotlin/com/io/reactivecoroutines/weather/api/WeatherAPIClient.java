@@ -16,9 +16,9 @@ public class WeatherAPIClient {
     private final String apiKey;
 
     public WeatherAPIClient(
-        final WebClient http,
-        @Value("${weatherapi.host}") final String host,
-        @Value("${weatherapi.api-key}") final String apiKey
+            final WebClient http,
+            @Value("${weatherapi.host}") final String host,
+            @Value("${weatherapi.api-key}") final String apiKey
     ) {
         this.http = http;
         this.host = host;
@@ -27,11 +27,11 @@ public class WeatherAPIClient {
 
     public Mono<WeatherAPIResponse> getCurrentWeatherIn(final String city) {
         return http
-            .get()
-            .uri("%s/v1/current.json?key=%s&q=%s&days=7".formatted(host, apiKey, city))
-            .exchangeToMono(response -> response.bodyToMono(WeatherAPIResponse.class))
-            .doFirst(() -> log.info("Getting current weather for {}", city))
-            .doOnError(e -> log.error("Cannot get current weather for %s".formatted(city), e))
-            .doOnSuccess(response -> log.info("Current weather for city {}: {}", city, response));
+                .get()
+                .uri("%s/v1/current.json?key=%s&q=%s&days=7".formatted(host, apiKey, city))
+                .exchangeToMono(response -> response.bodyToMono(WeatherAPIResponse.class))
+                .doFirst(() -> log.info("Getting current weather for {}", city))
+                .doOnError(e -> log.error("Cannot get current weather for %s".formatted(city), e))
+                .doOnSuccess(response -> log.info("Current weather for city {}: {}", city, response));
     }
 }

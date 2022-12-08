@@ -10,15 +10,15 @@ import java.time.Duration;
 
 @Configuration
 public class WebClientConfig {
-  @Bean
-  public ReactorResourceFactory resourceFactory() {
-    return new ReactorResourceFactory();
-  }
+    @Bean
+    public ReactorResourceFactory resourceFactory() {
+        return new ReactorResourceFactory();
+    }
 
-  @Bean
-  public WebClient webClient() {
-    return WebClient.builder()
-      .clientConnector(new ReactorClientHttpConnector(resourceFactory(), client -> client.responseTimeout(Duration.ofSeconds(10))))
-      .build();
-  }
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(resourceFactory(), client -> client.responseTimeout(Duration.ofSeconds(10))))
+                .build();
+    }
 }
