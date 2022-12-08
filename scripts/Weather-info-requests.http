@@ -1,0 +1,46 @@
+### get Algiers data
+GET http://localhost:8080/weather-infos/cities/?city=Algiers
+Accept: application/json
+
+### search European cities of 2012-12-07
+POST http://localhost:8080/weather-infos/search/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "region": "Europe",
+  "localDate": "2012-12-07"
+}
+
+### search Amsterdam the 2012-12-08
+POST http://localhost:8080/weather-infos/search-one/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "city": "Amsterdam",
+  "localDate": "2012-12-09"
+}
+
+### search one invalid city
+POST http://localhost:8080/weather-infos/search-one/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "city": "AAmsterdam"
+}
+
+### search random one for Helsinki
+GET http://localhost:8080/weather-infos/random/
+Accept: application/json
+Content-Type: application/json
+
+### weather stream (call from a browser to see response)
+GET http://localhost:8080/weather-infos/stream/
+Accept: application/json
+Content-Type: application/json
+
+### get all the weather data
+GET http://localhost:8080/weather-infos/
+Accept: application/json
