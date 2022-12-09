@@ -42,5 +42,5 @@ Accept: application/json
 Content-Type: application/json
 
 ### get all the weather data
-GET http://localhost:8080/weather-infos/
+GET http://localhost:8080/weather-infos
 Accept: application/json
