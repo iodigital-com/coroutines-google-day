@@ -1,24 +1,20 @@
 package com.io.reactivecoroutines.weather
 
+import kotlinx.coroutines.flow.Flow
 import org.jetbrains.annotations.NotNull
+import org.springframework.data.repository.kotlin.CoroutineSortingRepository
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor
-import org.springframework.data.repository.reactive.ReactiveCrudRepository
 import org.springframework.stereotype.Repository
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 
 @Repository
-interface WeatherRepository : ReactiveCrudRepository<WeatherInfo, String>, ReactiveQueryByExampleExecutor<WeatherInfo> {
+interface WeatherRepository : CoroutineSortingRepository<WeatherInfo, Long>,
+    ReactiveQueryByExampleExecutor<WeatherInfo> {
+    suspend fun save(weatherInfo: WeatherInfo): Flow<WeatherInfo>
 
-    override fun <S : WeatherInfo> save(weatherInfo: S): Mono<S>
-
-    @NotNull
-    override fun findAll(): Flux<WeatherInfo>
-
-    fun findById(id: Long): Mono<WeatherInfo>
+    suspend fun findById(id: Long): Flow<WeatherInfo>
 
     @NotNull
-    fun deleteById(id: Long): Mono<Unit>
+    suspend fun deleteById(id: Long): Flow<Unit>
 
-    fun queryWeatherInfoByCity(city: String): Flux<WeatherInfo>
+    suspend fun queryWeatherInfoByCity(city: String): Flow<WeatherInfo>
 }

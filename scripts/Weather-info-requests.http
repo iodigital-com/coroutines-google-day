@@ -41,6 +41,11 @@ GET http://localhost:8080/weather-infos/stream/
 Accept: application/json
 Content-Type: application/json
 
-### get all the weather data
+### API call current data in city (will call external API key with limited calls/day)
+GET http://localhost:8080/weather-infos/current?city=Utrecht
+Accept: application/json
+Content-Type: application/json
+
+### get all the weather data (will take a while and give you a large JSON)
 GET http://localhost:8080/weather-infos
 Accept: application/json
