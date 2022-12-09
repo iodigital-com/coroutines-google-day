@@ -25,8 +25,8 @@ public class WeatherController {
         return weatherService.getWeatherInfoById(id);
     }
 
-    @GetMapping("/current")
-    public Mono<WeatherInfo> getCurrentWeatherIn(@RequestParam final String city) {
-        return weatherService.getCurrentWeatherIn(city);
+    @GetMapping("/can-wear-t-shirt-today")
+    public Mono<String> canWearTShirtToday(@RequestParam final String name, final String city) {
+        return weatherService.canWearTShirtToday(name, city);
     }
 }

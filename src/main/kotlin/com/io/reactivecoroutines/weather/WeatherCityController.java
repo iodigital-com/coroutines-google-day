@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 
 @RestController
 @Validated
-@RequestMapping("/weather-infos/cities/")
+@RequestMapping("/weather-infos/cities")
 public class WeatherCityController {
     private final WeatherService weatherService;
 

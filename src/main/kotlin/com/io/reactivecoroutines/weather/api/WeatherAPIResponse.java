@@ -1,24 +1,25 @@
 package com.io.reactivecoroutines.weather.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.io.reactivecoroutines.weather.WeatherInfo;
+import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDate;
+import java.util.List;
 
-public record WeatherAPIResponse(Location location, @JsonProperty("current") CurrentWeather weather) {
-    public WeatherInfo toWeatherInfo() {
-        final var time = location.time();
-        return new WeatherInfo(
-                location.region(),
-                location.country(),
-                null,
-                location.city(),
-                LocalDate.of(
-                        time.getYear(),
-                        time.getMonthValue(),
-                        time.getDayOfMonth()
-                ),
-                "%.2f C / %.2f F".formatted(weather.celcius(), weather.fahrenheit())
-        );
+public record WeatherAPIResponse(@NotNull Location location, @NotNull Forecast forecast) {
+    public List<WeatherInfo> toWeatherInfoList() {
+        final var region = location.region();
+        final var country = location.country();
+        final var city = location.city();
+        return forecast.days().stream().map(f ->
+                new WeatherInfo(
+                        region,
+                        country,
+                        null,
+                        city,
+                        f.date(),
+                        "%.2f".formatted(f.temperature().avgF())
+                )
+        ).toList();
     }
 }
+
