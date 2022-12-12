@@ -62,6 +62,7 @@ class WeatherSearchHandler(
                             )
                         )
                     )
+                    .switchIfEmpty(Mono.error(IllegalArgumentException("No weather data found for filters: $filters")))
 //                        .doOnNext(a -> log.debug("searchOneByExample onNext"))
             }
     }

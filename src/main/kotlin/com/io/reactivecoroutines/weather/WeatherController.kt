@@ -8,12 +8,9 @@ import reactor.core.publisher.Mono
 @RestController
 @Validated
 @RequestMapping("/weather-infos")
-class WeatherController(
-    private val weatherService: WeatherService,
-) {
-
+class WeatherController(private val weatherService: WeatherService) {
     @GetMapping
-    fun getAllWeather(): Flux<WeatherInfo> {
+    fun allWeather(): Flux<WeatherInfo> {
         return weatherService.getAllWeather()
     }
 
@@ -22,8 +19,8 @@ class WeatherController(
         return weatherService.getWeatherInfoById(id)
     }
 
-    @GetMapping("/current")
-    fun getCurrentWeatherIn(@RequestParam city: String): Mono<WeatherInfo> {
-        return weatherService.getCurrentWeatherIn(city)
+    @GetMapping("/can-wear-t-shirt-today")
+    fun canWearTShirtToday(@RequestParam name: String, city: String): Mono<String> {
+        return weatherService.canWearTShirtToday(name, city)
     }
 }
