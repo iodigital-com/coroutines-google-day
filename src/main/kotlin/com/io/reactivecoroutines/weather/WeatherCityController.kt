@@ -1,6 +1,5 @@
 package com.io.reactivecoroutines.weather
 
-import kotlinx.coroutines.flow.Flow
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -15,7 +14,7 @@ class WeatherCityController(
 ) {
 
     @GetMapping
-    suspend fun getAllWeatherByCity(@RequestParam city: String): Flow<WeatherInfo> {
+    suspend fun getAllWeatherByCity(@RequestParam city: String): List<WeatherInfo> {
         return weatherService.queryWeatherInfoByCity(city)
     }
 }

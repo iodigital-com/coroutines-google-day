@@ -1,37 +1,61 @@
 package com.io.reactivecoroutines.weather.api
 
+import com.io.reactivecoroutines.weather.WeatherInfo
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
-import org.slf4j.Logger
+import kotlinx.coroutines.reactive.asFlow
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToFlow
-import org.springframework.web.reactive.function.client.exchangeToFlow
-
-private val log: Logger = LoggerFactory.getLogger(WeatherAPIClient::class.java)
+import org.springframework.web.reactive.function.client.bodyToMono
+import reactor.core.Exceptions
+import reactor.core.publisher.Mono
 
 @Component
 class WeatherAPIClient(
     private val http: WebClient,
-    @Value("\${weatherapi.host}") private val host: String,
-    @Value("\${weatherapi.api-key}") private val apiKey: String
+    @param:Value("\${weatherapi.host}") private val host: String,
+    @param:Value("\${weatherapi.api-key}") private val apiKey: String
 ) {
 
-    suspend fun getCurrentWeatherIn(city: String): Flow<WeatherAPIResponse> {
-        return http
-            .get()
-            .uri("%s/v1/current.json?key=%s&q=%s&days=7".format(host, apiKey, city))
-            .exchangeToFlow { response -> response.bodyToFlow<WeatherAPIResponse>() }
-            .onStart { log.info("Getting current weather for {}", city) }
-            .onCompletion { error ->
-                error?.let {
-                    log.error("Cannot get current weather for %s".format(city), error)
-                } ?: kotlin.run {
-                    log.info("Current weather for city $city")
+    companion object {
+        private val log = LoggerFactory.getLogger(WeatherAPIClient::class.java)
+    }
+
+    suspend fun getWeather(info: WeatherInfo): Flow<WeatherAPIResponse> {
+        val maybeQuery = info.city?.takeIf { it.isNotBlank() }
+            ?: info.state?.takeIf { it.isNotBlank() }
+            ?: info.country?.takeIf { it.isNotBlank() }
+            ?: info.region?.takeIf { it.isNotBlank() }
+
+        return maybeQuery?.let { query ->
+            val forecast = http
+                .get()
+                .uri("$host/v1/forecast.json?key=$apiKey&q=$query&days=7")
+                .exchangeToMono<WeatherAPIResponse?> { it.bodyToMono() }
+                .doFirst { log.info("Getting weather forecast for {}", query) }
+                .doOnError {
+                    log.error("Cannot get weather forecast for $query", it)
+                    Exceptions.propagate(it)
                 }
-            }
+                .doOnSuccess { response ->
+                    log.info(
+                        "Weather forecast for query {}: {}",
+                        query,
+                        response
+                    )
+                }
+
+            info.localDate?.let {
+                val localDate = info.localDate
+                forecast.flatMap { f: WeatherAPIResponse ->
+                    Mono
+                        .justOrEmpty(f.forecast.days.firstOrNull { it.date == localDate })
+                        .switchIfEmpty(Mono.error(IllegalArgumentException("No weather data found for query $query on $localDate")))
+                        .map { day -> WeatherAPIResponse(f.location, Forecast(listOf(day))) }
+                }
+            } ?: forecast
+        }?.asFlow()
+            ?: throw IllegalArgumentException("Invalid query")
     }
 }

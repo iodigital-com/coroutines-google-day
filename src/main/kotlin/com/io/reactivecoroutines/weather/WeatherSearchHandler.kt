@@ -2,15 +2,17 @@ package com.io.reactivecoroutines.weather
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.reactive.awaitFirst
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
-import org.springframework.web.reactive.function.server.bodyToFlow
+import org.springframework.web.reactive.function.server.bodyValueAndAwait
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import reactor.util.Logger
 import reactor.util.Loggers
 import java.time.LocalDate
@@ -23,50 +25,66 @@ class WeatherSearchHandler(
 ) {
 
     suspend fun searchByExample(req: ServerRequest): ServerResponse {
-        val filters = req.bodyToFlow<WeatherOptionFilters>().first()
 
-        return ServerResponse.ok().bodyAndAwait(
-            weatherService.queryByExample(
-                WeatherInfo(
-                    id = null,
-                    region = filters.region,
-                    country = filters.country,
-                    state = filters.state,
-                    city = filters.city,
-                    localDate = filters.localDate,
-                    avgTemperature = filters.avgTemperature
+        val filters = req.bodyToMono(WeatherOptionFilters::class.java).awaitFirst()
+
+        return ServerResponse
+            .ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValueAndAwait(
+                weatherService.queryByExample(
+                    WeatherInfo(
+                        id = null,
+                        region = filters.region,
+                        country = filters.country,
+                        state = filters.state,
+                        city = filters.city,
+                        localDate = filters.localDate,
+                        avgTemperature = filters.avgTemperature
+                    )
                 )
             )
-        )
     }
 
     suspend fun searchOneByExample(req: ServerRequest): ServerResponse {
-        val filters = req.bodyToFlow<WeatherOptionFilters>().first()
 
-        return ServerResponse.ok().bodyAndAwait(
-            weatherService.queryOneByExample(
-                WeatherInfo(
-                    id = null,
-                    region = filters.region,
-                    country = filters.country,
-                    state = filters.state,
-                    city = filters.city,
-                    localDate = filters.localDate,
-                    avgTemperature = filters.avgTemperature
-                )
+        val filters = req.bodyToMono(WeatherOptionFilters::class.java).awaitFirst()
+
+        return ServerResponse
+            .ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValueAndAwait(
+                weatherService.queryOneByExample(
+                    WeatherInfo(
+                        id = null,
+                        region = filters.region,
+                        country = filters.country,
+                        state = filters.state,
+                        city = filters.city,
+                        localDate = filters.localDate,
+                        avgTemperature = filters.avgTemperature
+                    )
+                ).takeIf {
+                    it.isNotEmpty()
+                }
+                    ?: throw IllegalArgumentException("No weather data found for filters: $filters")
             )
-        )
     }
 
     suspend fun searchRandomOneByExample(ignoredReq: ServerRequest): ServerResponse {
-        val serverResponse = ServerResponse
+        // bridge some blocking code here with a scheduler
+        val randomCriteria = Mono.fromCallable(this::getRandomCriteria)
+            .subscribeOn(Schedulers.boundedElastic())
+
+        return ServerResponse
             .ok()
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyAndAwait(weatherService.queryOneByExample(getRandomCriteria()))
+            .bodyValueAndAwait(
+                weatherService.queryOneByExample(randomCriteria.awaitFirst())
+            ).also {
+                log.debug("searchRandomOneByExample doOnSuccess")
+            }
 
-        log.debug("searchRandomOneByExample doOnSuccess")
-
-        return serverResponse
     }
 
     suspend fun getWeatherStream(request: ServerRequest): ServerResponse {
@@ -85,7 +103,7 @@ class WeatherSearchHandler(
                             localDate = LocalDate.of(1995, 1, 1).plusDays(daysToAdd),
                             avgTemperature = null
                         )
-                    )
+                    ).asFlow()
                 }
         )
     }
@@ -94,7 +112,7 @@ class WeatherSearchHandler(
         // simulate a blocking implementation
         try {
             log.debug("getRandomCriteria")
-            Thread.sleep(10)
+            Thread.sleep(100)
             log.debug("getRandomCriteria after sleep")
         } catch (e: InterruptedException) {
             throw RuntimeException(e)
