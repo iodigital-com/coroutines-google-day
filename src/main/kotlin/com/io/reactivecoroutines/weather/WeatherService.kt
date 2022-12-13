@@ -59,7 +59,7 @@ class WeatherService(
     suspend fun queryOneByExample(weatherInfo: WeatherInfo): List<WeatherInfo> {
         log.debug("WeatherService querySingleByExample")
 
-        val storedWeather = weatherRepository.findOne(Example.of(weatherInfo)).asFlow()
+        val storedWeather = weatherRepository.findAll(Example.of(weatherInfo)).take(1).asFlow()
 
         return storedWeather.toList().takeIf { it.isNotEmpty() }
             ?: fetchAndSaveWeatherInfoByExample(weatherInfo)
@@ -100,7 +100,7 @@ class WeatherService(
             .filter { it.localDate == today }
 
         if (result.isEmpty()) {
-            throw IllegalStateException("Don't know if $name can wear a t-shirt in $city today because weather data is missing")
+            listOf("Don't know if $name can wear a t-shirt in $city today because weather data is missing")
         }
 
         return result.map { weatherInfo ->

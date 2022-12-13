@@ -23,8 +23,11 @@ class ReactiveCoroutinesApplication {
                 builder.allowBlockingCallsInside(
                     "kotlin.reflect.jvm.ReflectJvmMapping",
                     "getKotlinFunction"
+                ).allowBlockingCallsInside(
+                    "kotlin.reflect.full.KClasses",
+                    "getMemberProperties"
                 )
-            },
+            }
         )
     }
 }
