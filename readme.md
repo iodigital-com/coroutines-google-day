@@ -15,7 +15,7 @@ As some of you are not familiar with kotlin, here are a few tips to help you wit
 
 - The primitive types and their boxed versions do not exist: `int` and `Integer` become -> `Int` in Kotlin
 - The types all exist in 2 variants: `nullable` and `non-nullable` so the java `String` becomes -> `String` and `String?`
-- every `nullable` variable has to be accessed safely using `?.` instead of `.`: for example: `a.b?.c?.d` -> a is not nullable, but everything after is.
+- every `nullable` variable has to be accessed safely using `?.` instead of `.`: for example: `a.b?.c?.d` -> a is not nullable, but everything after is. It is also possible to perform null checks manually and the value will automatically be cast to non-null version. [See docs](https://kotlinlang.org/docs/null-safety.html)
 - you can use `?:` to conditionally access the right part when the left part is `null`. You can use (but shouldn't) `!!` to assert something as not nullable (`a!!.b` will throw NPE at Runtime if a is null)
 - Functions and types are written differently: `Mono<ServerResponse> foo(Bar bar) {}` will become -> `fun foo(bar: Bar): Mono<ServerResponse> {}`
 - the variables can be assigned with `val` (constant reference) or `var` (mutable reference), you should only use `var` if you can't use `val`
