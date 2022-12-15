@@ -72,7 +72,7 @@ public class WeatherService {
     }
 
     public Mono<String> canWearTShirtToday(final String name, final String city) {
-        if (name.toLowerCase().equals("akif")) {
+        if (name.equalsIgnoreCase("akif")) {
             return Mono.just("Yes, Akif can wear a t-shirt anywhere, any time.");
         }
 
