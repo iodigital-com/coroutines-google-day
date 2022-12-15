@@ -1,12 +1,9 @@
 package com.io.reactivecoroutines.weather
 
 import com.io.reactivecoroutines.weather.api.WeatherAPIClient
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitFirst
+import kotlinx.coroutines.reactive.awaitFirstOrDefault
 import kotlinx.coroutines.reactor.asFlux
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.Sort
@@ -14,7 +11,6 @@ import org.springframework.stereotype.Service
 import reactor.util.Loggers
 import java.time.Clock
 import java.time.LocalDate
-import java.util.*
 
 @Service
 class WeatherService(
@@ -84,31 +80,31 @@ class WeatherService(
         return weatherAPI
             .getWeather(info)
             .map { it.toWeatherInfoList() }
-            .buffer()
+            .flatMapConcat { list -> list.asFlow().onEach { weatherRepository.save(it) } }
             .asFlux()
-            .awaitFirst()
+            .buffer()
+            .awaitFirstOrDefault(listOf())
     }
 
     suspend fun canWearTShirtToday(name: String, city: String): List<String> {
-        if (name.lowercase(Locale.getDefault()) == "akif") {
+        if (name.equals("akif", ignoreCase = true)) {
             return listOf("Yes, Akif can wear a t-shirt anywhere, any time.")
         }
 
         val today = LocalDate.now(clock)
 
-        val result = queryWeatherInfoByCity(city)
-            .filter { it.localDate == today }
+        val result = queryWeatherInfoByCity(city).firstOrNull { it.localDate == today }
 
-        if (result.isEmpty()) {
-            listOf("Don't know if $name can wear a t-shirt in $city today because weather data is missing")
-        }
-
-        return result.map { weatherInfo ->
-            if ((weatherInfo.avgTemperature?.toDouble() ?: 0.0) < T_SHIRT_WEARING_THRESHOLD) {
-                "No, $name cannot wear a t-shirt in $city today."
+        return listOf(
+            if (result == null) {
+                "Don't know if $name can wear a t-shirt in $city today because weather data is missing"
             } else {
-                "Yes, $name can wear a t-shirt in $city today."
+                if ((result.avgTemperature?.toDouble() ?: 0.0) < T_SHIRT_WEARING_THRESHOLD) {
+                    "No, $name cannot wear a t-shirt in $city today."
+                } else {
+                    "Yes, $name can wear a t-shirt in $city today."
+                }
             }
-        }
+        )
     }
 }
