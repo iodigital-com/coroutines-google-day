@@ -8,7 +8,6 @@ import reactor.core.publisher.Mono
 import reactor.util.Loggers
 import java.time.Clock
 import java.time.LocalDate
-import java.util.*
 
 @Service
 class WeatherService(
@@ -76,13 +75,12 @@ class WeatherService(
                     response.toWeatherInfoList()
                 )
             }
-            .switchIfEmpty { }
             .buffer()
             .flatMap(weatherRepository::saveAll)
     }
 
     fun canWearTShirtToday(name: String, city: String): Mono<String> {
-        if (name.lowercase(Locale.getDefault()) == "akif") {
+        if (name.equals("akif", ignoreCase = true)) {
             return Mono.just("Yes, Akif can wear a t-shirt anywhere, any time.")
         }
         val today = LocalDate.now(clock)
